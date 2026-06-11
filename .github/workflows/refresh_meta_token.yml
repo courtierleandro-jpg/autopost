@@ -1,0 +1,31 @@
+name: Rafraîchir token Meta (mensuel)
+
+on:
+  schedule:
+    - cron: "0 7 1 * *"   # 1er de chaque mois à 7h UTC (9h Paris)
+  workflow_dispatch:        # déclenchement manuel si besoin
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Installer les dépendances
+        run: pip install -r requirements.txt
+
+      - name: Rafraîchir le token Meta
+        env:
+          META_ACCESS_TOKEN: ${{ secrets.META_ACCESS_TOKEN }}
+          META_APP_ID: ${{ secrets.META_APP_ID }}
+          META_APP_SECRET: ${{ secrets.META_APP_SECRET }}
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          GITHUB_PAT: ${{ secrets.GITHUB_PAT }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+        run: cd src && python refresh_meta_token.py

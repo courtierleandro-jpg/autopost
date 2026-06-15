@@ -25,6 +25,12 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Checkout images (autopost-assets)
+        uses: actions/checkout@v4
+        with:
+          repository: courtierleandro-jpg/autopost-assets
+          path: images
+
       - name: Setup Python 3.11
         uses: actions/setup-python@v5
         with:

@@ -8,3 +8,7 @@ dist/
 build/
 .venv/
 venv/
+
+# Images : récupérées depuis le repo public autopost-assets
+# (checkout automatique en CI, symlink local pour les tests)
+/images

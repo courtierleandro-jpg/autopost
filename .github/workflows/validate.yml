@@ -4,11 +4,9 @@ on:
   push:
     paths:
       - "posts.csv"
-      - "images/**"
   pull_request:
     paths:
       - "posts.csv"
-      - "images/**"
   workflow_dispatch:
 
 jobs:
@@ -17,6 +15,12 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+
+      - name: Checkout images (autopost-assets)
+        uses: actions/checkout@v4
+        with:
+          repository: courtierleandro-jpg/autopost-assets
+          path: images
 
       - uses: actions/setup-python@v5
         with:

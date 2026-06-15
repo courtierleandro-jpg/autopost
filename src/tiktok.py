@@ -31,13 +31,20 @@ def post_to_tiktok(image_path: str, caption: str) -> str:
     token = _get_valid_token()
     force_video = os.environ.get("TIKTOK_FORCE_VIDEO", "false").lower() == "true"
 
+    try:
+        return _publish_with_token(token, image_path, caption, force_video)
+    except TokenExpiredError:
+        log.warning("Token TikTok expiré, tentative de refresh et réessai…")
+        token = _force_refresh_token()
+        return _publish_with_token(token, image_path, caption, force_video)
+
+
+def _publish_with_token(token: str, image_path: str, caption: str, force_video: bool) -> str:
     if force_video:
         return _post_as_video(token, image_path, caption)
-
     try:
         return _upload_photo(token, image_path, caption)
     except TikTokError as exc:
-        # Si Photo API non dispo, bascule automatiquement sur vidéo
         if any(kw in str(exc).upper() for kw in ("PHOTO", "MEDIA_TYPE", "NOT_SUPPORTED")):
             log.warning("Photo API indisponible (%s), conversion vidéo…", exc)
             return _post_as_video(token, image_path, caption)
@@ -59,6 +66,19 @@ def _get_valid_token() -> str:
         raise TikTokError(
             "Configure TIKTOK_ACCESS_TOKEN, ou les 3 variables "
             "TIKTOK_CLIENT_KEY + TIKTOK_CLIENT_SECRET + TIKTOK_REFRESH_TOKEN."
+        )
+    return _refresh_access_token(refresh, client_key, client_secret)
+
+
+def _force_refresh_token() -> str:
+    """Rafraîchit le token même si TIKTOK_ACCESS_TOKEN est présent (fallback sur expiration)."""
+    refresh = os.environ.get("TIKTOK_REFRESH_TOKEN", "")
+    client_key = os.environ.get("TIKTOK_CLIENT_KEY", "")
+    client_secret = os.environ.get("TIKTOK_CLIENT_SECRET", "")
+    if not (refresh and client_key and client_secret):
+        raise TikTokError(
+            "Token TikTok expiré et impossible de rafraîchir : "
+            "TIKTOK_REFRESH_TOKEN, TIKTOK_CLIENT_KEY et TIKTOK_CLIENT_SECRET requis."
         )
     return _refresh_access_token(refresh, client_key, client_secret)
 
